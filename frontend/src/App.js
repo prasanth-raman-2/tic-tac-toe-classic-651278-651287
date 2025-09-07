@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import { GameService } from './services/gameService';
+import { supabase } from './utils/supabaseClient';
 
-// PUBLIC_INTERFACE
 function App() {
   const [theme, setTheme] = useState('light');
+  const [game, setGame] = useState(null);
+  const [error, setError] = useState(null);
 
-  // Effect to apply theme to document element
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // PUBLIC_INTERFACE
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
+  const startNewGame = async (gameType = 'PVP') => {
+    try {
+      const newGame = await GameService.createGame(gameType);
+      setGame(newGame);
+      setError(null);
+    } catch (err) {
+      setError('Failed to start new game');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
+      <div className="App-header">
         <button 
           className="theme-toggle" 
           onClick={toggleTheme}
@@ -26,22 +37,27 @@ function App() {
         >
           {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
         </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+        
+        <h1>Tic Tac Toe</h1>
+        
+        {error && <div className="error">{error}</div>}
+        
+        <div className="game-controls">
+          <button onClick={() => startNewGame('PVP')}>
+            Start PVP Game
+          </button>
+          <button onClick={() => startNewGame('AI')}>
+            Start AI Game
+          </button>
+        </div>
+
+        {game && (
+          <div className="game-info">
+            <p>Game Status: {game.game_status}</p>
+            <p>Current Player: {game.current_player}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
